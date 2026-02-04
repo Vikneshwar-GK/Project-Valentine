@@ -20,6 +20,8 @@
     --white: #ffffff;
     --text: #4a3040;
     --text-light: #7a5a6a;
+    --glow-pink: rgba(232, 71, 116, 0.4);
+    --glow-gold: rgba(245, 200, 66, 0.4);
   }
 
   html {
@@ -29,10 +31,36 @@
 
   body {
     font-family: 'Quicksand', sans-serif;
-    background: var(--cream);
     color: var(--text);
     overflow-x: hidden;
     -webkit-tap-highlight-color: transparent;
+  }
+
+  /* ===== ANIMATED GRADIENT BACKGROUND ===== */
+  .animated-bg {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: linear-gradient(
+      135deg,
+      #fce4ec 0%,
+      #f8bbd0 20%,
+      #fce4ec 40%,
+      #fff3e0 60%,
+      #fce4ec 80%,
+      #f3e5f5 100%
+    );
+    background-size: 400% 400%;
+    animation: gradientShift 15s ease infinite;
+    z-index: -2;
+  }
+
+  @keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    25% { background-position: 50% 0%; }
+    50% { background-position: 100% 50%; }
+    75% { background-position: 50% 100%; }
+    100% { background-position: 0% 50%; }
   }
 
   /* ===== FLOATING HEARTS BACKGROUND ===== */
@@ -47,16 +75,26 @@
 
   .floating-heart {
     position: absolute;
-    font-size: 20px;
-    opacity: 0.15;
+    opacity: 0;
     animation: floatHeart linear infinite;
   }
 
+  /* Depth layers for hearts */
+  .floating-heart.heart-far {
+    filter: blur(1.5px);
+  }
+  .floating-heart.heart-mid {
+    filter: blur(0.5px);
+  }
+  .floating-heart.heart-near {
+    filter: blur(0px);
+  }
+
   @keyframes floatHeart {
-    0% { transform: translateY(100vh) rotate(0deg) scale(1); opacity: 0; }
-    10% { opacity: 0.15; }
-    90% { opacity: 0.15; }
-    100% { transform: translateY(-10vh) rotate(360deg) scale(0.5); opacity: 0; }
+    0% { transform: translateY(100vh) scale(1); opacity: 0; }
+    8% { opacity: var(--heart-opacity, 0.2); }
+    85% { opacity: var(--heart-opacity, 0.2); }
+    100% { transform: translateY(-10vh) scale(0.6); opacity: 0; }
   }
 
   /* ===== MUTE BUTTON ===== */
@@ -66,18 +104,19 @@
     z-index: 1000;
     width: 44px; height: 44px;
     border-radius: 50%;
-    border: 2px solid var(--pink);
-    background: rgba(255,255,255,0.9);
-    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255,107,138,0.4);
+    background: rgba(255,255,255,0.25);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     cursor: pointer;
     display: none;
     align-items: center;
     justify-content: center;
     font-size: 20px;
     transition: all 0.3s ease;
-    box-shadow: 0 2px 12px rgba(255,107,138,0.2);
+    box-shadow: 0 2px 12px rgba(255,107,138,0.2), inset 0 0 20px rgba(255,255,255,0.1);
   }
-  .mute-btn:hover { transform: scale(1.1); background: var(--pink-light); }
+  .mute-btn:hover { transform: scale(1.1); background: rgba(255,209,220,0.5); }
 
   /* ===== CHAPTER BASE ===== */
   .chapter {
@@ -92,17 +131,24 @@
   }
   .chapter.active {
     display: flex;
-    animation: fadeInChapter 0.8s ease forwards;
+    animation: fadeInChapter 1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   }
 
   @keyframes fadeInChapter {
-    from { opacity: 0; transform: translateY(30px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(30px) scale(0.97);
+      filter: blur(6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      filter: blur(0px);
+    }
   }
 
   /* ===== CHAPTER 0: ENVELOPE ===== */
   #chapter-envelope {
-    background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 50%, #fce4ec 100%);
     cursor: pointer;
   }
 
@@ -111,6 +157,12 @@
     width: 260px;
     height: 180px;
     perspective: 800px;
+    animation: envelopeFloat 3s ease-in-out infinite;
+  }
+
+  @keyframes envelopeFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
   }
 
   .envelope {
@@ -123,13 +175,17 @@
     width: 100%;
     height: 100%;
     background: linear-gradient(145deg, #fff, #fef0f0);
-    border-radius: 8px;
-    box-shadow: 0 10px 40px rgba(232,71,116,0.25);
+    border-radius: 12px;
+    box-shadow:
+      0 10px 40px rgba(232,71,116,0.25),
+      0 0 60px rgba(232,71,116,0.12),
+      0 0 120px rgba(232,71,116,0.06);
     position: relative;
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
+    border: 1px solid rgba(255,107,138,0.15);
   }
 
   .envelope-body::before {
@@ -146,7 +202,25 @@
     z-index: 2;
     margin-top: 20px;
     animation: heartPulse 1.5s ease-in-out infinite;
-    filter: drop-shadow(0 4px 8px rgba(232,71,116,0.3));
+    filter: drop-shadow(0 4px 12px rgba(232,71,116,0.4));
+  }
+
+  /* Envelope glow ring */
+  .envelope-glow {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 300px; height: 230px;
+    border-radius: 20px;
+    background: transparent;
+    box-shadow: 0 0 40px rgba(232,71,116,0.15), 0 0 80px rgba(232,71,116,0.08);
+    animation: envelopeGlow 2s ease-in-out infinite alternate;
+    pointer-events: none;
+  }
+
+  @keyframes envelopeGlow {
+    0% { box-shadow: 0 0 40px rgba(232,71,116,0.1), 0 0 80px rgba(232,71,116,0.05); }
+    100% { box-shadow: 0 0 60px rgba(232,71,116,0.25), 0 0 120px rgba(232,71,116,0.1); }
   }
 
   @keyframes heartPulse {
@@ -160,6 +234,7 @@
     font-size: 24px;
     color: var(--pink-dark);
     animation: gentleBounce 2s ease-in-out infinite;
+    text-shadow: 0 0 20px rgba(232,71,116,0.15);
   }
 
   @keyframes gentleBounce {
@@ -175,20 +250,22 @@
   }
 
   /* ===== CHAPTER 1: THE LETTER ===== */
-  #chapter-letter {
-    background: linear-gradient(180deg, #fce4ec 0%, var(--cream) 100%);
-  }
 
   .letter-paper {
-    background: #fffaf5;
-    border-radius: 12px;
+    background: rgba(255, 250, 245, 0.65);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-radius: 16px;
     padding: 32px 28px;
     max-width: 500px;
     width: 100%;
     min-height: 300px;
-    box-shadow: 0 8px 40px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05);
+    box-shadow:
+      0 8px 32px rgba(0,0,0,0.06),
+      0 1px 3px rgba(0,0,0,0.04),
+      inset 0 0 30px rgba(255,255,255,0.3);
     position: relative;
-    border: 1px solid rgba(255,107,138,0.15);
+    border: 1px solid rgba(255,107,138,0.12);
   }
 
   .letter-paper::before {
@@ -216,6 +293,7 @@
     margin-left: 2px;
     vertical-align: text-bottom;
     animation: blink 0.8s infinite;
+    box-shadow: 0 0 6px rgba(232,71,116,0.5);
   }
 
   @keyframes blink {
@@ -237,6 +315,7 @@
     font-family: 'Caveat', cursive;
     font-size: 18px;
     color: var(--pink-dark);
+    text-shadow: 0 0 12px rgba(232,71,116,0.2);
   }
 
   .scroll-arrow-icon {
@@ -257,7 +336,6 @@
 
   /* ===== CHAPTER 2: SCRATCH CARDS ===== */
   #chapter-scratch {
-    background: linear-gradient(180deg, var(--cream) 0%, #fff9e6 50%, var(--cream) 100%);
     padding: 40px 16px;
   }
 
@@ -267,6 +345,7 @@
     color: var(--pink-dark);
     text-align: center;
     margin-bottom: 8px;
+    text-shadow: 0 0 20px rgba(232,71,116,0.2);
   }
 
   .scratch-subtitle {
@@ -295,14 +374,26 @@
     border-radius: 16px;
     overflow: hidden;
     cursor: pointer;
-    box-shadow: 0 4px 20px rgba(245,200,66,0.25);
+    box-shadow:
+      0 4px 20px rgba(245,200,66,0.25),
+      0 0 30px rgba(245,200,66,0.08);
     touch-action: none;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .scratch-card:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 8px 30px rgba(245,200,66,0.35),
+      0 0 40px rgba(245,200,66,0.12);
   }
 
   .scratch-card-content {
     position: absolute;
     inset: 0;
-    background: linear-gradient(135deg, #fff5f7, #fff0f3);
+    background: linear-gradient(135deg, rgba(255,245,247,0.9), rgba(255,240,243,0.9));
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -312,6 +403,7 @@
     font-size: 17px;
     line-height: 1.4;
     color: var(--text);
+    border: 1px solid rgba(255,107,138,0.1);
   }
 
   .scratch-card canvas {
@@ -333,6 +425,21 @@
     z-index: 0;
   }
 
+  /* Scratch sparkle trail */
+  .scratch-sparkle {
+    position: absolute;
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 10;
+    animation: scratchSparkle 0.5s ease forwards;
+  }
+
+  @keyframes scratchSparkle {
+    0% { transform: scale(1); opacity: 1; }
+    100% { transform: scale(0); opacity: 0; }
+  }
+
   .scratch-done-msg {
     display: none;
     text-align: center;
@@ -347,6 +454,7 @@
     font-family: 'Dancing Script', cursive;
     font-size: 24px;
     color: var(--pink-dark);
+    text-shadow: 0 0 15px rgba(232,71,116,0.15);
   }
 
   .scratch-done-msg .next-btn {
@@ -361,28 +469,45 @@
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 20px rgba(232,71,116,0.35);
+    box-shadow: 0 4px 20px rgba(232,71,116,0.35), 0 0 30px rgba(232,71,116,0.1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .scratch-done-msg .next-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: btnShimmer 2s infinite;
+  }
+
+  @keyframes btnShimmer {
+    0% { left: -100%; }
+    100% { left: 100%; }
   }
 
   .scratch-done-msg .next-btn:hover {
     transform: translateY(-2px) scale(1.03);
-    box-shadow: 0 6px 28px rgba(232,71,116,0.45);
+    box-shadow: 0 6px 28px rgba(232,71,116,0.45), 0 0 40px rgba(232,71,116,0.15);
   }
 
   /* ===== CHAPTER 3: ADVENTURE ===== */
-  #chapter-adventure {
-    background: linear-gradient(180deg, var(--cream) 0%, #f0e6ff 50%, var(--cream) 100%);
-  }
 
   .adventure-box {
-    background: white;
-    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 24px;
     padding: 36px 28px;
     max-width: 480px;
     width: 100%;
     text-align: center;
-    box-shadow: 0 8px 40px rgba(0,0,0,0.07);
-    border: 2px solid rgba(255,107,138,0.12);
+    box-shadow:
+      0 8px 32px rgba(0,0,0,0.06),
+      inset 0 0 30px rgba(255,255,255,0.3);
+    border: 1px solid rgba(255,107,138,0.1);
   }
 
   .adventure-question {
@@ -392,6 +517,7 @@
     color: var(--text);
     margin-bottom: 24px;
     min-height: 60px;
+    transition: opacity 0.5s ease;
   }
 
   .adventure-response {
@@ -402,6 +528,7 @@
     min-height: 30px;
     opacity: 0;
     transition: opacity 0.5s ease;
+    text-shadow: 0 0 12px rgba(232,71,116,0.15);
   }
   .adventure-response.visible { opacity: 1; }
 
@@ -413,8 +540,10 @@
 
   .adventure-choice {
     padding: 14px 24px;
-    background: linear-gradient(135deg, #fff5f7, #ffeef2);
-    border: 2px solid var(--pink-light);
+    background: rgba(255,245,247,0.7);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 2px solid rgba(255,209,220,0.5);
     border-radius: 50px;
     font-family: 'Quicksand', sans-serif;
     font-size: 16px;
@@ -428,7 +557,7 @@
     background: linear-gradient(135deg, var(--pink), var(--pink-dark));
     color: white;
     transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(232,71,116,0.3);
+    box-shadow: 0 4px 20px rgba(232,71,116,0.3);
     border-color: transparent;
   }
 
@@ -447,14 +576,18 @@
     width: 10px; height: 10px;
     border-radius: 50%;
     background: var(--pink-light);
-    transition: all 0.3s ease;
+    transition: all 0.4s ease;
+    box-shadow: none;
   }
-  .step-dot.active { background: var(--pink-dark); transform: scale(1.2); }
+  .step-dot.active {
+    background: var(--pink-dark);
+    transform: scale(1.2);
+    box-shadow: 0 0 10px rgba(232,71,116,0.4);
+  }
   .step-dot.done { background: var(--pink); }
 
   /* ===== CHAPTER 4: THE QUESTION ===== */
   #chapter-question {
-    background: linear-gradient(180deg, #fce4ec, #fff0f5, #fce4ec);
     min-height: 100vh;
     position: relative;
     overflow: hidden;
@@ -466,8 +599,13 @@
     color: var(--pink-dark);
     text-align: center;
     margin-bottom: 12px;
-    text-shadow: 0 2px 8px rgba(232,71,116,0.15);
-    animation: fadeInUp 0.8s ease forwards;
+    text-shadow: 0 0 30px rgba(232,71,116,0.2), 0 2px 8px rgba(232,71,116,0.1);
+    animation: fadeInUp 0.8s ease forwards, questionGlow 3s ease-in-out infinite;
+  }
+
+  @keyframes questionGlow {
+    0%, 100% { text-shadow: 0 0 20px rgba(232,71,116,0.15), 0 2px 8px rgba(232,71,116,0.1); }
+    50% { text-shadow: 0 0 40px rgba(232,71,116,0.3), 0 2px 8px rgba(232,71,116,0.2); }
   }
 
   .question-gif {
@@ -476,7 +614,8 @@
     margin: 16px 0 24px;
     border-radius: 20px;
     overflow: hidden;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.1), 0 0 40px rgba(232,71,116,0.08);
+    border: 2px solid rgba(255,107,138,0.15);
   }
 
   .question-gif img {
@@ -508,20 +647,40 @@
     font-weight: 700;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 6px 24px rgba(230,57,70,0.35);
+    box-shadow: 0 6px 24px rgba(230,57,70,0.35), 0 0 40px rgba(230,57,70,0.1);
     z-index: 10;
+    position: relative;
+    overflow: hidden;
+    animation: yesBtnPulse 2s ease-in-out infinite;
+  }
+
+  @keyframes yesBtnPulse {
+    0%, 100% { box-shadow: 0 6px 24px rgba(230,57,70,0.35), 0 0 40px rgba(230,57,70,0.1); }
+    50% { box-shadow: 0 6px 32px rgba(230,57,70,0.5), 0 0 60px rgba(230,57,70,0.2); }
+  }
+
+  /* Golden shimmer on Yes button */
+  .btn-yes::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: btnShimmer 2.5s infinite;
   }
 
   .btn-yes:hover {
     transform: scale(1.08);
-    box-shadow: 0 8px 32px rgba(230,57,70,0.5);
+    box-shadow: 0 8px 40px rgba(230,57,70,0.5), 0 0 60px rgba(230,57,70,0.2);
   }
 
   .btn-no {
     padding: 12px 32px;
-    background: #f0f0f0;
+    background: rgba(240,240,240,0.7);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     color: #999;
-    border: 2px solid #ddd;
+    border: 2px solid rgba(221,221,221,0.6);
     border-radius: 50px;
     font-family: 'Quicksand', sans-serif;
     font-size: 16px;
@@ -544,16 +703,35 @@
 
   /* ===== CHAPTER 5: CELEBRATION ===== */
   #chapter-celebration {
-    background: linear-gradient(180deg, #fff0f5, #fce4ec, #fff0f5);
     text-align: center;
     position: relative;
     overflow: hidden;
+  }
+
+  /* Full-screen celebration glow */
+  .celebration-glow {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 500px; height: 500px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(232,71,116,0.15) 0%, transparent 70%);
+    animation: celebGlow 3s ease-in-out infinite alternate;
+    pointer-events: none;
+  }
+
+  @keyframes celebGlow {
+    0% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+    100% { transform: translate(-50%, -50%) scale(1.5); opacity: 1; }
   }
 
   .celebration-emoji {
     font-size: 64px;
     margin-bottom: 16px;
     animation: heartPulse 1s ease-in-out infinite;
+    filter: drop-shadow(0 0 20px rgba(232,71,116,0.3));
+    position: relative;
+    z-index: 1;
   }
 
   .celebration-title {
@@ -561,6 +739,9 @@
     font-size: 36px;
     color: var(--pink-dark);
     margin-bottom: 20px;
+    text-shadow: 0 0 30px rgba(232,71,116,0.2);
+    position: relative;
+    z-index: 1;
   }
 
   .celebration-message {
@@ -570,6 +751,19 @@
     color: var(--text);
     max-width: 460px;
     margin: 0 auto 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .celebration-message .cel-line {
+    display: block;
+    opacity: 0;
+    transform: translateY(15px);
+    animation: celLineFade 0.6s ease forwards;
+  }
+
+  @keyframes celLineFade {
+    to { opacity: 1; transform: translateY(0); }
   }
 
   .celebration-gif {
@@ -578,7 +772,10 @@
     border-radius: 20px;
     overflow: hidden;
     margin: 0 auto 24px;
-    box-shadow: 0 8px 30px rgba(232,71,116,0.2);
+    box-shadow: 0 8px 30px rgba(232,71,116,0.2), 0 0 50px rgba(232,71,116,0.08);
+    border: 2px solid rgba(255,107,138,0.15);
+    position: relative;
+    z-index: 1;
   }
 
   .celebration-gif img {
@@ -592,6 +789,12 @@
     font-size: 20px;
     color: var(--pink-dark);
     margin-top: 16px;
+    text-shadow: 0 0 15px rgba(232,71,116,0.15);
+    position: relative;
+    z-index: 1;
+    opacity: 0;
+    animation: celLineFade 0.6s ease forwards;
+    animation-delay: 3s;
   }
 
   /* ===== CONFETTI CANVAS ===== */
@@ -631,10 +834,14 @@
     .celebration-message { font-size: 26px; }
     .envelope-container { width: 320px; height: 220px; }
     .envelope-heart { font-size: 64px; }
+    .celebration-glow { width: 700px; height: 700px; }
   }
 </style>
 </head>
 <body>
+
+<!-- Animated Gradient Background -->
+<div class="animated-bg"></div>
 
 <!-- Floating Hearts Background -->
 <div class="floating-hearts" id="floatingHearts"></div>
@@ -648,6 +855,7 @@
 <!-- ===== CHAPTER 0: ENVELOPE ===== -->
 <div class="chapter active" id="chapter-envelope">
   <div class="envelope-container" id="envelopeClick">
+    <div class="envelope-glow"></div>
     <div class="envelope">
       <div class="envelope-body">
         <div class="envelope-heart">💌</div>
@@ -706,36 +914,43 @@
 
 <!-- ===== CHAPTER 5: CELEBRATION ===== -->
 <div class="chapter" id="chapter-celebration">
+  <div class="celebration-glow"></div>
   <div class="celebration-emoji">💖</div>
   <h1 class="celebration-title">I knew you'd say yes, my babyy!</h1>
   <div class="celebration-gif">
     <img src="https://media.giphy.com/media/wIVA0zh5pt0G5YtcAL/giphy.gif" alt="couple hug" loading="lazy">
   </div>
-  <div class="celebration-message">
-    Koshaaa, Mere Jaan... I love you more than words on a screen could ever say.<br><br>
-    I want to give you the best life. I want to marry you, grow old with you, and make you happy every single day.<br><br>
-    You are my heartbeat, my life, my everything.<br><br>
-    Now close this and come give me a hug. 🤗
+  <div class="celebration-message" id="celebrationMessage">
   </div>
-  <div class="celebration-signoff">— Vikky, forever yours ❤️</div>
+  <div class="celebration-signoff" id="celebrationSignoff">— Vikky, forever yours ❤️</div>
 </div>
 
 <script>
 // ===== GLOBAL STATE =====
 let musicStarted = false;
 
-// ===== FLOATING HEARTS =====
+// ===== FLOATING HEARTS (Pure CSS hearts with depth layers) =====
 function createFloatingHearts() {
   const container = document.getElementById('floatingHearts');
-  const hearts = ['💕', '💗', '💖', '💘', '❤️', '🩷', '♥️'];
-  for (let i = 0; i < 20; i++) {
+  const hearts = ['💕', '💗', '💖', '💘', '❤️', '🩷', '♥️', '💓', '💞'];
+  const layers = [
+    { cls: 'heart-far', opacity: 0.15, sizeRange: [14, 20] },
+    { cls: 'heart-mid', opacity: 0.22, sizeRange: [18, 26] },
+    { cls: 'heart-near', opacity: 0.3, sizeRange: [22, 32] }
+  ];
+
+  for (let i = 0; i < 40; i++) {
+    const layer = layers[Math.floor(Math.random() * layers.length)];
     const heart = document.createElement('div');
-    heart.className = 'floating-heart';
+    heart.className = 'floating-heart ' + layer.cls;
+    const size = layer.sizeRange[0] + Math.random() * (layer.sizeRange[1] - layer.sizeRange[0]);
+
     heart.textContent = hearts[Math.floor(Math.random() * hearts.length)];
+    heart.style.fontSize = size + 'px';
     heart.style.left = Math.random() * 100 + '%';
-    heart.style.fontSize = (12 + Math.random() * 18) + 'px';
-    heart.style.animationDuration = (8 + Math.random() * 12) + 's';
-    heart.style.animationDelay = (Math.random() * 10) + 's';
+    heart.style.setProperty('--heart-opacity', String(layer.opacity));
+    heart.style.animationDuration = (10 + Math.random() * 15) + 's';
+    heart.style.animationDelay = (Math.random() * 12) + 's';
     container.appendChild(heart);
   }
 }
@@ -772,6 +987,7 @@ function goToChapter(chapterId) {
 
   if (chapterId === 'chapter-scratch') initScratchCards();
   if (chapterId === 'chapter-adventure') initAdventure();
+  if (chapterId === 'chapter-celebration') animateCelebrationMessage();
 }
 
 // ===== CHAPTER 0: ENVELOPE =====
@@ -797,9 +1013,9 @@ const letterLines = [
   { text: "Koshaaa, Mere Jaan,", delay: 90 },
   { text: "\n", delay: 400 },
   { text: "You make my life so beautif", delay: 80 },
-  { text: null, backspace: 7, delay: 100 },  // backspace "beautif"
+  { text: null, backspace: 7, delay: 100 },
   { text: "beautifu", delay: 85 },
-  { text: null, backspace: 8, delay: 100 },  // backspace again
+  { text: null, backspace: 8, delay: 100 },
   { text: "BEAUTIFUL. There. I said it.", delay: 75 },
   { text: "\n\n", delay: 700 },
   { text: "You know what, forget the letter.", delay: 75 },
@@ -815,7 +1031,6 @@ async function startTyping() {
 
   for (const line of letterLines) {
     if (line.backspace) {
-      // Backspace effect
       for (let i = 0; i < line.backspace; i++) {
         const textNode = cursor.previousSibling;
         if (textNode && textNode.nodeType === Node.TEXT_NODE) {
@@ -877,7 +1092,6 @@ function initScratchCards() {
     card.appendChild(canvas);
     grid.appendChild(card);
 
-    // Initialize canvas
     setTimeout(() => setupScratchCanvas(canvas, card, index), 100);
   });
 }
@@ -925,6 +1139,10 @@ function setupScratchCanvas(canvas, card, index) {
     ctx.beginPath();
     ctx.arc(x, y, 22, 0, Math.PI * 2);
     ctx.fill();
+
+    // Spawn sparkle trail
+    spawnScratchSparkle(card, x, y);
+
     checkReveal();
   }
 
@@ -936,9 +1154,8 @@ function setupScratchCanvas(canvas, card, index) {
       if (imageData.data[i] < 128) transparent++;
     }
     const pct = transparent / (imageData.data.length / 4);
-    if (pct > 0.35) {
+    if (pct > 0.65) {
       scratchRevealed = true;
-      // Clear remaining
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       canvas.style.opacity = '0';
       canvas.style.transition = 'opacity 0.5s ease';
@@ -961,6 +1178,27 @@ function setupScratchCanvas(canvas, card, index) {
   canvas.addEventListener('touchstart', (e) => { e.preventDefault(); isScratching = true; const r = canvas.getBoundingClientRect(); const t = e.touches[0]; scratch(t.clientX - r.left, t.clientY - r.top); }, { passive: false });
   canvas.addEventListener('touchmove', (e) => { e.preventDefault(); if (!isScratching) return; const r = canvas.getBoundingClientRect(); const t = e.touches[0]; scratch(t.clientX - r.left, t.clientY - r.top); }, { passive: false });
   canvas.addEventListener('touchend', () => isScratching = false);
+}
+
+// Scratch sparkle trail
+function spawnScratchSparkle(card, x, y) {
+  const sparkleColors = ['#f5c842', '#fff3c4', '#ff6b8a', '#ffffff'];
+  for (let i = 0; i < 2; i++) {
+    const sparkle = document.createElement('div');
+    sparkle.className = 'scratch-sparkle';
+    const color = sparkleColors[Math.floor(Math.random() * sparkleColors.length)];
+    const offsetX = (Math.random() - 0.5) * 20;
+    const offsetY = (Math.random() - 0.5) * 20;
+    const size = 2 + Math.random() * 4;
+    sparkle.style.width = size + 'px';
+    sparkle.style.height = size + 'px';
+    sparkle.style.background = color;
+    sparkle.style.boxShadow = `0 0 ${size}px ${color}`;
+    sparkle.style.left = (x + offsetX) + 'px';
+    sparkle.style.top = (y + offsetY) + 'px';
+    card.appendChild(sparkle);
+    setTimeout(() => sparkle.remove(), 500);
+  }
 }
 
 // ===== CHAPTER 3: ADVENTURE =====
@@ -1061,7 +1299,6 @@ function handleAdventureChoice(response) {
     if (currentStep < adventureSteps.length) {
       renderAdventureStep();
     } else {
-      // Go to the big question
       goToChapter('chapter-question');
     }
   }, isLastStep ? 2500 : 3000);
@@ -1090,7 +1327,7 @@ function clickedNo() {
   if (noClickCount <= noMessages.length) {
     msgEl.textContent = noMessages[noClickCount - 1];
     msgEl.style.animation = 'none';
-    msgEl.offsetHeight; // reflow
+    msgEl.offsetHeight;
     msgEl.style.animation = 'fadeInUp 0.4s ease';
   }
 
@@ -1099,7 +1336,6 @@ function clickedNo() {
   yesBtn.style.transform = `scale(${scale})`;
 
   if (noClickCount >= noMessages.length) {
-    // No button disappears
     noBtn.style.transform = 'scale(0)';
     noBtn.style.opacity = '0';
     setTimeout(() => noBtn.style.display = 'none', 400);
@@ -1129,9 +1365,45 @@ function clickedYes() {
 }
 
 // ===== CHAPTER 5: CELEBRATION =====
+
+// Line-by-line message animation
+const celebrationLines = [
+  "Koshaaa, Mere Jaan... I love you more than words on a screen could ever say.",
+  "",
+  "I want to give you the best life. I want to marry you, grow old with you, and make you happy every single day.",
+  "",
+  "You are my heartbeat, my life, my everything.",
+  "",
+  "Now close this and come give me a hug. 🤗"
+];
+
+function animateCelebrationMessage() {
+  const container = document.getElementById('celebrationMessage');
+  container.innerHTML = '';
+
+  let totalDelay = 0;
+  celebrationLines.forEach((line, i) => {
+    if (line === '') {
+      // Empty line = spacer
+      const br = document.createElement('br');
+      container.appendChild(br);
+      return;
+    }
+    const span = document.createElement('span');
+    span.className = 'cel-line';
+    span.textContent = line;
+    span.style.animationDelay = totalDelay + 'ms';
+    container.appendChild(span);
+    totalDelay += 500;
+  });
+
+  // Signoff animation delay
+  const signoff = document.getElementById('celebrationSignoff');
+  signoff.style.animationDelay = (totalDelay + 400) + 'ms';
+}
+
 function startCelebration() {
   launchConfetti();
-  // Continuous mini confetti bursts
   let burstCount = 0;
   const interval = setInterval(() => {
     launchConfetti(40);
